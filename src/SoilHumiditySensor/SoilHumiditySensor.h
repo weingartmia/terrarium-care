@@ -13,6 +13,8 @@ class SoilHumiditySensor : public Component{
 
         void init() override;
         void read() override;
+        bool isValid() override;
+        char checkThreshold() override;
 
         int readData(int samples);
         int powerPin;

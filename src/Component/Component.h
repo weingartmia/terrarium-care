@@ -9,6 +9,8 @@ class Component {
 
         virtual void init()=0;
         virtual void read()=0;
+        virtual bool isValid()=0;
+        virtual char checkThreshold()=0;
 
         int value;
         const int thresholdValue;

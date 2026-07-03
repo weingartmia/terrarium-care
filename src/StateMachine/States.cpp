@@ -13,7 +13,8 @@ IdleState::IdleState(){
 };
 
 ReadingState::ReadingState(){
-
+};
+CheckingState::CheckingState(){
 };
 
 void IdleState::handleAction(){
@@ -38,13 +39,26 @@ void ReadingState::handleAction(){
   
     Serial.println("reading from sensors");
 
-    SoilHumiditySensor* sensor;
-    sensor->read();
+    SoilHumiditySensor* sensorSoil;
+    sensorSoil->read();
 
 
 }
 
 void ReadingState::handleTimeOut(){
-    Serial.println("error timout from resding dtate");
+    Serial.println("error timout from reading state");
     
+}
+
+void CheckingState:: handleAction(){
+    Serial.println("checking values from sensors");
+
+    SoilHumiditySensor* sensorSoil;
+    if(sensorSoil->isValid()){
+        Serial.println("entering idle state from chacking state-> values are ok");
+        State* this_state = new IdleState();
+    }
+
+
+
 }

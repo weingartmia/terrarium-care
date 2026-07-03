@@ -30,3 +30,13 @@ class ReadingState : public State{
         char name[13]="readingState";
 
 };
+
+class CheckingState : public State{
+
+    public:
+        CheckingState();
+        void handleAction() override;
+        void handleTimeOut() override;
+        char name[14]="checkingState";
+
+};

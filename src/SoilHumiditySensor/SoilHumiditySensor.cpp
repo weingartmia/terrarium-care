@@ -37,6 +37,33 @@ void SoilHumiditySensor::read(){
 
     const int data= readData(10);
     this->value = data;
+    
+}
+
+bool SoilHumiditySensor::isValid(){
+    Serial.println("checking if data from dht sensor are valid...");
+
+    if (this->value==0) {
+
+        Serial.println("soil humidity sensor is most likely not working or the humidity is 100% ");
+        return false;
+
+    }
+    else return true;
+
+}
+
+char SoilHumiditySensor::checkThreshold(){
+    Serial.println("checking if data from soil humidity sensor are inside target values...");
+
+    if(this->value <= thresholdValue  ){
+        Serial.println("data from soil humidity are smaller");
+        return 's';
+
+    }
+
+    else return 'm';
+
 }
 
 
