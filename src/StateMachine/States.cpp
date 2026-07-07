@@ -55,8 +55,14 @@ void CheckingState:: handleAction(){
 
     SoilHumiditySensor* sensorSoil;
     if(sensorSoil->isValid()){
-        Serial.println("entering idle state from chacking state-> values are ok");
-        State* this_state = new IdleState();
+        Serial.println("values from soil sensor are valid");
+
+        if (sensorSoil->checkThreshold()=='m'){
+            Serial.println("values from soil sensor are inside threshold-> entering from checking state to idle state");
+
+            State* this_state = new IdleState();
+        }
+        
     }
 
 

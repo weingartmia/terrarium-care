@@ -19,6 +19,7 @@ class DhtHumiditySensor : public Component{
 
         int valueTemperature;
         int valueHumidity;
+    
         const int topThresholdValue;
 
         

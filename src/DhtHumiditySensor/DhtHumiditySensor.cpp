@@ -58,7 +58,5 @@ char DhtHumiditySensor::checkThreshold(){
         return 'b';
     }
     else return 'm';
-    
-
 
 }

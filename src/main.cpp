@@ -68,9 +68,12 @@ void setup() {
 
 void loop() {
   Serial.printf("%s\n",context.name);
+  Serial.println(soilSensor.value);
+  Serial.println("test");
   
   context.timeOut();
   context.action();
+  delay(2000);
   // Time = millis() ;
   // interval = Time /60000; // set milliseconds to minutes
 
