@@ -1,30 +1,33 @@
 #include "SoilHumiditySensor.h"
+#include <Arduino.h>
 
-
-SoilHumiditySensor::SoilHumiditySensor(const int sensorPin, const int powerPin, const int thresholdValue)
+SoilHumiditySensor::SoilHumiditySensor(uint8_t sensorPin, const int powerPin, const int thresholdValue)
 :
-Component(sensorPin, thresholdValue), powerPin(powerPin){
+Sensor(sensorPin, thresholdValue), powerPin(powerPin){
 }
 
 void  SoilHumiditySensor::init(){
-
+      Serial.println("~init of soil sensor from SoilHumiditySensor init()");
+      pinMode(powerPin, OUTPUT);
       digitalWrite(powerPin, LOW); // Ensure sensor is off at start
 
 }
 
 int SoilHumiditySensor::readData(int samples){
 
- 
+
   long total = 0;
 
   digitalWrite(powerPin, HIGH); // Power ON sensor
+
+  
   delay(500); // Wait for sensor to stabilize
 
   for (int i = 0; i < samples; i++) {                    
  total += analogRead(sensorPin);
     delay(10); // Short gap between cycles
  }
- Serial.print(total);
+ 
 
   digitalWrite(powerPin, LOW); // Power OFF sensor
   return total / samples;
@@ -36,16 +39,17 @@ int SoilHumiditySensor::readData(int samples){
 void SoilHumiditySensor::read(){
 
     const int data= readData(10);
-    this->value = data;
+    
+    value=data;
     
 }
 
 bool SoilHumiditySensor::isValid(){
-    Serial.println("checking if data from dht sensor are valid...");
+    Serial.println("-checking if data from soil sensor are valid...");
 
-    if (this->value==0) {
+    if (value==0) {
 
-        Serial.println("soil humidity sensor is most likely not working or the humidity is 100% ");
+        Serial.println("-x soil humidity sensor is most likely not working or the humidity is 100% ");
         return false;
 
     }
@@ -54,10 +58,10 @@ bool SoilHumiditySensor::isValid(){
 }
 
 char SoilHumiditySensor::checkThreshold(){
-    Serial.println("checking if data from soil humidity sensor are inside target values...");
+    Serial.println("--checking if data from soil humidity sensor are inside target values...");
 
-    if(this->value <= thresholdValue  ){
-        Serial.println("data from soil humidity are smaller");
+    if(value >= thresholdValue  ){
+        Serial.println("--x data from soil humidity are bigger(humidity is smaller)");
         return 's';
 
     }

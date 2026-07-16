@@ -1,26 +1,32 @@
 #pragma once 
-#include "../Component/Component.h"
-
+#include "../Sensor/Sensor.h"
+#include <DHT.h>
 
 
 
 #ifndef DhtHumiditySensor_h
 #define DhtHumiditySensor_h
 
-class DhtHumiditySensor : public Component{
+class DhtHumiditySensor : public Sensor{
+
+    private:
+        DHT dht;// make instance of dht inside class to encaplsulate
+        const int topThresholdValue;
+        uint8_t sensorType;
+
     public:
-        DhtHumiditySensor(const int sensorPin,const int thresholdValue,const int topThresholdValue);
+        DhtHumiditySensor(uint8_t sensorPin,const int thresholdValue,const int topThresholdValue,uint8_t sensorType);
 
         void init() override;
         void read() override;
         bool isValid() override;
         char checkThreshold() override;
+       
 
-
-        int valueTemperature;
-        int valueHumidity;
+        float valueTemperature;
+        float valueHumidity;
     
-        const int topThresholdValue;
+        
 
         
         

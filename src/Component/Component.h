@@ -1,20 +1,17 @@
 #pragma once
 #include <Arduino.h>
-
 #ifndef Component_h
-#define Component_h
+
+#define  Component_h
+
 class Component {
+    private:
+       uint8_t pin;
     public:
-        Component(const int thresholdValue, const int sensorPin);
+        Component(uint8_t pin);
+        void activate(int time);
+        void init();
+        bool isWorking;
 
-        virtual void init()=0;
-        virtual void read()=0;
-        virtual bool isValid()=0;
-        virtual char checkThreshold()=0;
-
-        int value;
-        const int thresholdValue;
-        const int sensorPin;
 };
 #endif
-

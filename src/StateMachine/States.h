@@ -1,42 +1,137 @@
 #pragma once
-#include "../SoilHumiditySensor/SoilHumiditySensor.h"
+
+
+
+#ifndef State_h
+#define State_h
+class Context;
+
 
 class State{
+    
+    protected:
+
+        Context* context = nullptr;
+
+
+    
     public:
-       State();
+  
+       void setContext(Context* con);
+      
+       
        virtual void handleAction() =0;
-       virtual void handleTimeOut() =0;
-       char name[0];
+       virtual ~State()= default;
+    //    char name[0];
 };
 
-class IdleState : public State{
+#endif
+class TimeHandleState : public State{
+    public:
+        TimeHandleState();
+        virtual void handleTimeOut()=0;
+        void handleInterval();
+        int interval;
+        unsigned long Time;
+        int timer;
+        ~TimeHandleState( 
+        ) override= default;
+
+};
+
+class ReadingCheckingState : public State{
 
     public:
-        IdleState();
+        void readData();
+
+        bool getBothSensorsValidity();
+        bool getBothSensorsInvalidity();
+        bool getSoilValidity();
+        bool getDhtValidity();
+
+
+};
+
+class IdleState : public TimeHandleState{
+
+    public:
+
         void handleAction() override;
         void handleTimeOut() override;
-        char name[10] = "idleState";
+        
+        ~IdleState(){};
+
+        // char name[10] = "idleState";
         
         
 
 };
 
-class ReadingState : public State{
+class ReadingState : public ReadingCheckingState{
 
     public:
-        ReadingState();
+
         void handleAction() override;
-        void handleTimeOut() override;
-        char name[13]="readingState";
+
+
+        // char name[13]="readingState";
 
 };
 
-class CheckingState : public State{
+class CheckingState : public ReadingCheckingState{
 
     public:
-        CheckingState();
+
+        void handleAction() override;
+        void checkSensorsThresholds();
+        void checkSensorSoilThreshold();
+        void checkSensorDhtThreshold();
+        void handleCount (int caller);
+
+
+        // char name[14]="checkingState";
+
+};
+
+class InitState : public State{
+
+    public:
+        void handleAction() override;
+        void handleWifi();
+
+        // char name[10]="InitState";
+
+};
+
+class ErrorState : public TimeHandleState{
+
+    public:
         void handleAction() override;
         void handleTimeOut() override;
-        char name[14]="checkingState";
+        ~ErrorState() override= default;
+};
+
+class WateringState : public State{
+
+    public:
+        void handleAction() override;
+
+
+};
+
+class VentingState : public State{
+
+    public:
+        void handleAction() override;
+
+
+};
+
+class HumidityControlState : public ReadingCheckingState{
+    public:
+        void handleAction() override;
+        bool checkChangedSoilHumidity(int hum);
+        bool checkChangedAirHumidity(float hum);
+        void setErrorPump();
 
 };

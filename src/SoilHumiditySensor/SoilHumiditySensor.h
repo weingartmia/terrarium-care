@@ -1,14 +1,14 @@
 
 #pragma once
-#include "../Component/Component.h"
+#include "../Sensor/Sensor.h"
 
 #ifndef SoilHumiditySensor_h
 #define SoilHumiditySensor_h
 
-class SoilHumiditySensor : public Component{
+class SoilHumiditySensor : public Sensor{
 
     public:
-        SoilHumiditySensor(const int sensorPin,const int powerPin, const int  thresholdValue);
+        SoilHumiditySensor(uint8_t sensorPin,const int powerPin, const int  thresholdValue);
 
 
         void init() override;
@@ -17,8 +17,12 @@ class SoilHumiditySensor : public Component{
         char checkThreshold() override;
 
         int readData(int samples);
-        int powerPin;
         int value;
+       
+
+        
+    private:
+        int powerPin;
 
 
 };

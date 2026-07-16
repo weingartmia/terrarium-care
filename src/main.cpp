@@ -1,7 +1,8 @@
 #include <Arduino.h>
-#include "SoilHumiditySensor/SoilHumiditySensor.h"
+// #include "SoilHumiditySensor/SoilHumiditySensor.h"
+
 #include "StateMachine/Context.h"
-#include "StateMachine/States.h"
+// #include "StateMachine/States.h"
 
 // #include <SPI.h>
 // #include <Wire.h>
@@ -23,10 +24,15 @@
 // #define OLED_CS    12
 // #define OLED_RESET 13
 
-#define SENSOR_PIN  A0 // Analog input pin for sensor
-#define POWER_PIN  7// Digital pin to power the sensor
-#define BORDER_SOIL 400// Min soil moisture.
-#define WATER_PIN  2//water pump pin
+// #define SENSOR_PIN  A0 // Analog input pin for sensor
+// #define POWER_PIN  7// Digital pin to power the sensor
+// #define BORDER_SOIL 400// Min soil moisture.
+// #define WATER_PIN  2//water pump pin
+
+
+
+// #define DHTPIN 4
+// #define DHTTYPE DHT22
 
 // Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT,
 //   OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
@@ -34,7 +40,8 @@
 // DHT dht(DHTPIN, DHTTYPE);
 
 Context context;
-SoilHumiditySensor soilSensor(SENSOR_PIN ,POWER_PIN,BORDER_SOIL);
+// SoilHumiditySensor soilSensor(SENSOR_PIN ,POWER_PIN,BORDER_SOIL);
+
 
 
 
@@ -43,11 +50,19 @@ SoilHumiditySensor soilSensor(SENSOR_PIN ,POWER_PIN,BORDER_SOIL);
 // int interval;
 
 void setup() {
+    Serial.begin(115200);
+    delay(1000);
 
-  Serial.begin(9600);
-  soilSensor.init();
-  context.setState(new IdleState());
-  Serial.print("setting up...");
+    Serial.println("context is getting ready.... - from void setup main.cpp");
+    context.init();
+    
+    Serial.println("setup finished - from void setup main.cpp");
+  // Serial.begin(9600);// i must create new state init state
+  // soilSensor.init();
+ 
+
+  // context.setState(new IdleState());
+  // Serial.print("setting up...");
 
   
 
@@ -67,13 +82,15 @@ void setup() {
 
 
 void loop() {
-  Serial.printf("%s\n",context.name);
-  Serial.println(soilSensor.value);
-  Serial.println("test");
+  // Serial.printf("%s\n",context.name);
+  // Serial.println(soilSensor.value);
   
-  context.timeOut();
+  
+  // context.timeOut();
+
   context.action();
-  delay(2000);
+  context.ota.handle();
+  delay(1000);
   // Time = millis() ;
   // interval = Time /60000; // set milliseconds to minutes
 

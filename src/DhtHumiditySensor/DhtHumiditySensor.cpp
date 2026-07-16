@@ -1,43 +1,40 @@
 
 #include <Arduino.h>
 #include "DhtHumiditySensor.h"
-#include <DHT.h>
 
-#define DHTPIN 4
-#define DHTTYPE DHT22
 
-DHT sensor(DHTPIN,DHTTYPE);
 
-DhtHumiditySensor::DhtHumiditySensor(const int sensorPin, const int thresholdValue, const int topThresholdValue)
+
+
+DhtHumiditySensor::DhtHumiditySensor(uint8_t sensorPin, const int thresholdValue, const int topThresholdValue, uint8_t sensorType)
 :
-Component(sensorPin,thresholdValue), topThresholdValue(topThresholdValue)
+Sensor(sensorPin,thresholdValue), topThresholdValue(topThresholdValue),sensorType(sensorType), dht(sensorPin,sensorType)
  {}
 
 void DhtHumiditySensor::init(){
 
-    Serial.println("dht sensor init");
-    sensor.begin();
+    Serial.println("~dht sensor init");
+    dht.begin();
     
 }
 
 void DhtHumiditySensor::read(){
     Serial.println("reading from dht sensor...");
 
-    this->valueHumidity= sensor.readHumidity();
-    this->valueTemperature= sensor.readTemperature();
+    valueHumidity= dht.readHumidity();
+    valueTemperature= dht.readTemperature();
 
-    Serial.println("humidity%");
-    Serial.printf("%s\n",this->valueHumidity);
+
 
 
 }
 
 bool DhtHumiditySensor::isValid(){
-    Serial.println("checking if data from dht sensor are valid...");
+    Serial.println("-checking if data from dht dht are valid...");
 
-    if (isnan(this->valueHumidity) || isnan(this->valueTemperature)) {
+    if ((isnan(valueHumidity) || isnan(valueTemperature)) || valueHumidity>100) {
 
-        Serial.println("failed to read from DHT sensor");
+        Serial.println("-x Error failed to read from DHT dht");
         return false;
 
     }
@@ -46,15 +43,15 @@ bool DhtHumiditySensor::isValid(){
 }
 
 char DhtHumiditySensor::checkThreshold(){
-    Serial.println("checking if data from dht sensor are inside target values...");
+    Serial.println("-- checking if data from dht dht are inside target values...");
 
-    if(this->valueHumidity <= thresholdValue  ){
-        Serial.println("data from dht are smaller");
+    if(valueHumidity <= thresholdValue  ){
+        Serial.println("--x data from dht are smaller");
         return 's';
 
     }
-    else if (this->valueHumidity >= topThresholdValue){
-        Serial.println("data from dht are bigger");
+    else if (valueHumidity >= topThresholdValue){
+        Serial.println("--x data from dht are bigger");
         return 'b';
     }
     else return 'm';
