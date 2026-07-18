@@ -6,6 +6,8 @@
 #include "Component/Component.h"
 
 #include "BasicOTA.hpp"
+#include <ArduinoOTA.h>
+#include <WiFi.h>
         
 #ifndef Context_h
 #define Context_h

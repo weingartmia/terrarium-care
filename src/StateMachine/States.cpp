@@ -3,8 +3,9 @@
 #include <Arduino.h>
 #include "config.h"
 
+#include <ArduinoOTA.h>
 #include <WiFi.h>
-
+#include "time.h"
 
 
 
@@ -250,7 +251,9 @@ void InitState::handleWifi(){
     while (WiFi.waitForConnectResult() != WL_CONNECTED) {
         this->context->display.showMessage("failed to connect to wifi");
         Serial.println("Connection Failed! Rebooting...");
+        Serial.print('.');
         delay(5000);
+        
         ESP.restart();
         
     }
@@ -260,7 +263,10 @@ void InitState::handleWifi(){
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
     configTime(GMT_OFF_SET_SEC, DAY_LIGHT_OFF_SET_SEC, NTP_SERVER);
+    this->context->getLocalTime();
 
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
 }
 void InitState::handleAction(){
   
@@ -309,7 +315,7 @@ void WateringState :: handleAction(){
 
     Serial.println("        Curently in watering state and watering....");
     this->context->display.showWatering();
-    this->context->pump.activate(WATERING_TIME);
+    this->context->pump.activate(10);
     Serial.println("->Entering HumidityControlState from WAtering State");
     this->context->setState(new HumidityControlState()); 
 }
@@ -318,7 +324,7 @@ void VentingState :: handleAction(){
 
     Serial.println("        Curently in venting state and venting....");
     this->context->display.showWatering();
-    this->context->vent.activate(VENTING_TIME);
+    this->context->vent.activate(10);
     Serial.println("->Entering HumidityControlState from WAtering State");
     this->context->setState(new ReadingState()); 
 }

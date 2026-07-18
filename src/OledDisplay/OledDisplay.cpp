@@ -123,7 +123,7 @@ void OledDisplay::showReading(){
     display.setTextSize(1); // text size
     display.println("reading sensor data..");
     display.display();
-    delay(1000);
+    // delay(1000);
 }
 
 void OledDisplay::showChecking(){
@@ -133,7 +133,7 @@ void OledDisplay::showChecking(){
     display.setTextSize(1); // text size
     display.println("processing sensor    data");
     display.display();
-    delay(1000);
+    // delay(50);
 
 }
 
@@ -149,7 +149,7 @@ void OledDisplay::showRereading(int count){
     display.print(MAX_FALILURE_READING);
 
     display.display();
-    delay(1000);
+    // delay(500);
 
 }
 
@@ -178,6 +178,6 @@ void OledDisplay ::showMessage(String message){
     display.setTextSize(1); // text size
     display.println(message);
     display.display();
-    delay(1000);
+    // delay(500);
 
 }

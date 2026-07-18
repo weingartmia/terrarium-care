@@ -89,7 +89,7 @@ void loop() {
   // context.timeOut();
 
   context.action();
-  context.ota.handle();
+  // context.getLocalTime();
   delay(1000);
   // Time = millis() ;
   // interval = Time /60000; // set milliseconds to minutes
@@ -200,5 +200,3 @@ void loop() {
 //     display.print(interval - timer);
 //     display.print(" min");}
 //   }
-
-
