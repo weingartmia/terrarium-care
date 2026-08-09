@@ -35,6 +35,7 @@ class Context{
         void getLocalTime();
 
         int count = 0;// this isnt encaplsulated
+        int lastWatered=0;
 
        // char *name = this->state->name;
         

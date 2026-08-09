@@ -2,14 +2,14 @@
 #include <Arduino.h>
 #include "config.h"
 #include "time.h"
+#include <Wire.h>
 
 
 
 Context::Context(): 
-    sensorSoil(SENSOR_PIN,POWER_PIN,BORDER_SOIL), 
+    sensorSoil(SENSOR_PIN,BORDER_SOIL,WATER_HUMIDITY,AIR_HUMIDITY), 
     sensorDht(DHTPIN,BOTTOM_BORDER_HUMIDITY,TOP_BORDER_HUMIDITY,DHTTYPE), 
-    display(SCREEN_WIDTH, SCREEN_HEIGHT,
-    OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS),
+    display(SCREEN_WIDTH, SCREEN_HEIGHT,&Wire, OLED_RESET),
     pump(WATER_PIN),
     vent(VENT_PIN)
     

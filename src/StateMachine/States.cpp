@@ -15,20 +15,22 @@ void State::setContext(Context* con){
     Serial.println("--setting new instance of context--");
     this->context=con;
 }
-TimeHandleState::TimeHandleState():Time(millis()),interval(Time/60000),timer(Time/60000) {
+TimeHandleState::TimeHandleState():Time(millis()),interval(Time/1000),timer(Time/1000) {
     // Time= millis();
     // interval = Time /60000;
     // timer= interval;
+
 };
 
-void TimeHandleState::handleInterval(){
+WateringState::WateringState(int time):time(time){};
+
+void TimeHandleState::handleInterval(int diff){
     Serial.println(Time);
+    
     Time = millis() ;
-    interval = Time /60000;// set milliseconds to minutes
-     
+    interval = Time /1000;// set milliseconds to minutes
 
-
-    if (interval - timer >= 2 ){
+    if (interval - timer >= diff){
         Serial.println("here");
         timer = interval;
         handleTimeOut();
@@ -41,11 +43,16 @@ void ReadingCheckingState::readData(){
     
     this->context->display.showReading();
     this->context->sensorSoil.read();
-    Serial.println(this->context->sensorSoil.value);
+    Serial.println(this->context->sensorSoil.percent);
+    
 
     this->context->sensorDht.read();
     Serial.println(this->context->sensorDht.valueHumidity);
     Serial.println(this->context->sensorDht.valueTemperature);
+
+    // this->context->display.showMessage("raw reading:");
+    // this->context->display.showDhtData(this->context->sensorDht.valueHumidity,this->context->sensorDht.valueTemperature);
+    // this->context->display.showSoilData(this->context->sensorSoil.percent);   
 
 }
 bool ReadingCheckingState :: getBothSensorsValidity(){
@@ -83,17 +90,25 @@ void IdleState::handleAction(){
     
     
     Serial.println("      Currently in idlestate...");
-    handleInterval();
+    handleInterval(INTERVAL_BETWEEN_READINGS);
 
     this->context->display.showDhtData(this->context->sensorDht.valueHumidity,this->context->sensorDht.valueTemperature);
-    this->context->display.showSoilData(this->context->sensorSoil.value);   
-    this->context->display.showOledValues(interval,timer);
+    this->context->display.showSoilData(this->context->sensorSoil.percent); 
+
+    int minitesInt= interval/60;
+    int watered = this->context->lastWatered/60;
+    this->context->display.showOledValues(minitesInt,watered);
+
+
+    Serial.println("last watered timer:");
+    Serial.print(this->context->lastWatered);
 
 }
 
 void IdleState::handleTimeOut(){
 
      Serial.println("->Entering reading state from Init State");
+     
      this->context->setState(new ReadingState());
  
     
@@ -133,7 +148,7 @@ void CheckingState:: handleCount(int caller){
         else if (caller==1){
              Serial.println("                          failure caller are both sensors");
             Serial.println("->Entering error state from checking state");
-            this->context->setState(new ErrorState());
+            this->context->setState(new WateringState(WATERING_TIME_IN_ERROR));
 
         }
         else if (caller ==2) {
@@ -148,12 +163,13 @@ void CheckingState :: checkSensorsThresholds(){
 
                 Serial.println("==data from sensors are inside threshold void checkSensorsThreshold()");
                 Serial.println("-> entering from checking state to idle state");
+                this->context->pump.isWorking= true;
                 this->context->setState(new IdleState());    
             }
             else if(this->context->sensorSoil.checkThreshold()=='s' || this->context->sensorDht.checkThreshold()=='s'){
                 Serial.println("==one of sensors humidity is smaller void checkSensorsThreshold()");
                 Serial.println("-> entering from checking state to watering state");
-                this->context->setState(new WateringState()); 
+                this->context->setState(new WateringState(WATERING_TIME)); 
                 
                 
             }
@@ -177,7 +193,7 @@ void CheckingState :: checkSensorDhtThreshold(){
             else if(this->context->sensorDht.checkThreshold()=='s'){
                 Serial.println("==dht sensor  humidity is smaller void checkSensorDhtThreshold()");
                 Serial.println("-> entering from checking state to watering state");
-                this->context->setState(new WateringState()); 
+                this->context->setState(new WateringState(WATERING_TIME)); 
                 
                 
             }
@@ -200,7 +216,7 @@ void CheckingState :: checkSensorSoilThreshold(){
             else if(this->context->sensorSoil.checkThreshold()=='s'){
                 Serial.println("==soil sensors humidity is smaller void checkSensorSoilThreshold()");
                 Serial.println("-> entering from checking state to watering state");
-                this->context->setState(new WateringState());  
+                this->context->setState(new WateringState(WATERING_TIME));  
                 
                 
             }
@@ -216,7 +232,7 @@ void CheckingState :: checkSensorSoilThreshold(){
 void CheckingState:: handleAction(){
 
     Serial.println("      Currently in checking state and checking values from sensors...");
-    Serial.println(this->context->sensorSoil.value);
+    Serial.println(this->context->sensorSoil.percent);
     this->context->display.showChecking();
        
     if(getBothSensorsValidity()){ //ckeck data validity
@@ -265,8 +281,8 @@ void InitState::handleWifi(){
     configTime(GMT_OFF_SET_SEC, DAY_LIGHT_OFF_SET_SEC, NTP_SERVER);
     this->context->getLocalTime();
 
-    WiFi.disconnect(true);
-    WiFi.mode(WIFI_OFF);
+    // WiFi.disconnect(true);
+    // WiFi.mode(WIFI_OFF);
 }
 void InitState::handleAction(){
   
@@ -277,6 +293,7 @@ void InitState::handleAction(){
     this->context->sensorDht.init();
     this->context->display.init();
     this->context->pump.init();
+    this->context->vent.init();
 
     handleWifi();
     Serial.println("->leaving init state entering idle state ");
@@ -288,26 +305,29 @@ void InitState::handleAction(){
 
 void ErrorState ::handleAction(){
     Serial.println("    Currently in Error state failed....");
-    handleInterval();
+    handleInterval(INTERVAL_BETWEEN_READINGS);
 
     if (this->context->sensorDht.isValid()) this->context->display.showDhtData(this->context->sensorDht.valueHumidity,this->context->sensorDht.valueTemperature);
     else this->context->display.showDhtFail();
 
-    if (this->context->sensorSoil.isValid()) this->context->display.showSoilData(this->context->sensorSoil.value);
+    if (this->context->sensorSoil.isValid()) this->context->display.showSoilData(this->context->sensorSoil.percent);
     else this->context->display.showSoilFail();
 
     if(!this->context->pump.isWorking) this->context->display.showWaterPumpFail();
 
-        
-    this->context->display.showOledValues(interval,timer);
+    int minitesInt= interval/60;
+    int watered = this->context->lastWatered/60;
+    this->context->display.showOledValues(minitesInt,watered);
+
+
 
 }
 
 void ErrorState::handleTimeOut(){
     Serial.println("timeout from error state...");
-
+    // this->context->lastWatered = interval;
     // this->context->pump.water(WATERING_TIME);
-    this->context->setState(new WateringState());
+    this->context->setState(new ReadingState());
     
 }
 
@@ -315,8 +335,16 @@ void WateringState :: handleAction(){
 
     Serial.println("        Curently in watering state and watering....");
     this->context->display.showWatering();
-    this->context->pump.activate(10);
+    this->context->pump.activate();
+    this->context->lastWatered = interval;
+
+    handleInterval(time);
+
+}
+void WateringState :: handleTimeOut(){
+    Serial.println("---------finished watering....");
     Serial.println("->Entering HumidityControlState from WAtering State");
+    this->context->pump.turnOff();
     this->context->setState(new HumidityControlState()); 
 }
 
@@ -324,9 +352,18 @@ void VentingState :: handleAction(){
 
     Serial.println("        Curently in venting state and venting....");
     this->context->display.showWatering();
-    this->context->vent.activate(10);
+    this->context->vent.activate();
+    handleInterval(VENTING_TIME);
+
+
+}
+
+void VentingState :: handleTimeOut(){
+    Serial.println("-------finished venting");
     Serial.println("->Entering HumidityControlState from WAtering State");
+    this->context->vent.turnOff();
     this->context->setState(new ReadingState()); 
+
 }
 
 bool HumidityControlState :: checkChangedAirHumidity(float hum){
@@ -335,7 +372,7 @@ bool HumidityControlState :: checkChangedAirHumidity(float hum){
 
 }
 bool HumidityControlState :: checkChangedSoilHumidity(int hum){
-    if(hum > this->context->sensorSoil.value ) return true;
+    if(hum < this->context->sensorSoil.percent ) return true;
     else return false;
 
 }
@@ -348,7 +385,7 @@ void HumidityControlState :: handleAction(){
 
   
     float hum = this->context->sensorDht.valueHumidity;
-    int humS= this->context->sensorSoil.value;
+    int humS= this->context->sensorSoil.percent;
     
 
     Serial.println("        Curently in humidity control state and  controlling humidity after vent/pump action....");

@@ -8,7 +8,7 @@
 class SoilHumiditySensor : public Sensor{
 
     public:
-        SoilHumiditySensor(uint8_t sensorPin,const int powerPin, const int  thresholdValue);
+        SoilHumiditySensor(uint8_t sensorPin, const int  thresholdValue, int max,int min);
 
 
         void init() override;
@@ -17,12 +17,16 @@ class SoilHumiditySensor : public Sensor{
         char checkThreshold() override;
 
         int readData(int samples);
-        int value;
+        
+        int percent;
        
 
         
     private:
+        int max;
+        int min;
         int powerPin;
+        int value;
 
 
 };

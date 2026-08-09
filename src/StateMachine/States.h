@@ -30,10 +30,15 @@ class TimeHandleState : public State{
     public:
         TimeHandleState();
         virtual void handleTimeOut()=0;
-        void handleInterval();
+        void handleInterval(int diff); // interval in minutes
+
         int interval;
         unsigned long Time;
         int timer;
+
+        int wateredTimer;
+        
+
         ~TimeHandleState( 
         ) override= default;
 
@@ -48,6 +53,9 @@ class ReadingCheckingState : public State{
         bool getBothSensorsInvalidity();
         bool getSoilValidity();
         bool getDhtValidity();
+        ~ ReadingCheckingState(
+            )override
+             = default;
 
 
 };
@@ -59,7 +67,7 @@ class IdleState : public TimeHandleState{
         void handleAction() override;
         void handleTimeOut() override;
         
-        ~IdleState(){};
+        ~IdleState()override=default;
 
         // char name[10] = "idleState";
         
@@ -72,6 +80,7 @@ class ReadingState : public ReadingCheckingState{
     public:
 
         void handleAction() override;
+        ~ReadingState()override=default;
 
 
         // char name[13]="readingState";
@@ -87,6 +96,7 @@ class CheckingState : public ReadingCheckingState{
         void checkSensorSoilThreshold();
         void checkSensorDhtThreshold();
         void handleCount (int caller);
+        ~CheckingState()override=default;
 
 
         // char name[14]="checkingState";
@@ -98,6 +108,7 @@ class InitState : public State{
     public:
         void handleAction() override;
         void handleWifi();
+        ~InitState()override=default;
 
         // char name[10]="InitState";
 
@@ -111,18 +122,26 @@ class ErrorState : public TimeHandleState{
         ~ErrorState() override= default;
 };
 
-class WateringState : public State{
+class WateringState : public TimeHandleState{
 
     public:
+        WateringState(int time);
         void handleAction() override;
+        void handleTimeOut() override;
+        ~WateringState() override=default;
+    private:
+        int time;
+
 
 
 };
 
-class VentingState : public State{
+class VentingState : public TimeHandleState{
 
     public:
         void handleAction() override;
+        void handleTimeOut() override;
+        ~VentingState() override=default;
 
 
 };
@@ -133,5 +152,6 @@ class HumidityControlState : public ReadingCheckingState{
         bool checkChangedSoilHumidity(int hum);
         bool checkChangedAirHumidity(float hum);
         void setErrorPump();
+        ~HumidityControlState() override=default;
 
 };

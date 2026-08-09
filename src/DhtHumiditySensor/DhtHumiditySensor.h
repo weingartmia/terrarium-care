@@ -23,8 +23,8 @@ class DhtHumiditySensor : public Sensor{
         char checkThreshold() override;
        
 
-        float valueTemperature;
-        float valueHumidity;
+        int valueTemperature;
+        int valueHumidity;
     
         
 

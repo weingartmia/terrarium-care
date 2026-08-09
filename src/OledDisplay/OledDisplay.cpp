@@ -2,17 +2,20 @@
 #include "OledDisplay.h"
 #include "config.h"
 #include <Arduino.h>
+#include <Wire.h>
 
-OledDisplay::OledDisplay(int screenWidth, int screenHeight, int mosi,int clk, int dc, int reset,int cs)
-:screenWidth(screenWidth), screenHeight(screenHeight), mosi(mosi), clk(clk), dc(dc), reset(reset), cs(cs), display(screenWidth,screenHeight,mosi,clk,dc,reset,cs){};
+#define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
+
+OledDisplay::OledDisplay(int screenWidth, int screenHeight,TwoWire *wire, int reset)
+:screenWidth(screenWidth), screenHeight(screenHeight),  reset(reset), wire(wire), display(screenWidth,screenHeight,wire,reset){};
 
 void OledDisplay::init(){
     Serial.println("~init of oled");
 
-    if(!display.begin(SSD1306_SWITCHCAPVCC)) {
+  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
     for(;;); // Don't proceed, loop forever
-    }
+  }
     
     display.clearDisplay();
     display.setTextSize(1); // text size
@@ -44,14 +47,14 @@ void OledDisplay :: showDhtData( float humidity, float temperature){
     display.println(temperature);
 
     display.setCursor(0,15);  
-    display.print("Humidity %");
+    display.print("Humidity % ");
     display.println(humidity);
 
 }
 void OledDisplay ::showSoilData(int soilHumidity){
     
-        display.setCursor(0, 20);
-        display.print("Soil humidity: ");
+        display.setCursor(0, 25);
+        display.print("Soil humidity % ");
         display.println(soilHumidity);
 
 }

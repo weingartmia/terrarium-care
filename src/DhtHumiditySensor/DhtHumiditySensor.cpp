@@ -23,6 +23,8 @@ void DhtHumiditySensor::read(){
 
     valueHumidity= dht.readHumidity();
     valueTemperature= dht.readTemperature();
+    // valueHumidity=0;
+    // valueTemperature=0;
 
 
 

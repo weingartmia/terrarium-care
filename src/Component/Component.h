@@ -9,8 +9,9 @@ class Component {
        uint8_t pin;
     public:
         Component(uint8_t pin);
-        void activate(int time);
+        void activate();
         void init();
+        void turnOff();
         bool isWorking;
 
 };

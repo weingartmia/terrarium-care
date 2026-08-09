@@ -1,8 +1,9 @@
 
 #pragma once
 #include <Arduino.h>
-#include <SPI.h>
+// #include <SPI.h>
 #include <Wire.h>
+
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
@@ -16,17 +17,20 @@ class OledDisplay{
     private:
         int screenWidth;
         int screenHeight;
-        int mosi;
-        int clk;
-        int dc;
+        // int mosi;
+        // int clk;
+        // int dc;
         int reset;
-        int cs;
+        // Wire *wire;
+        TwoWire* wire;
+        // int cs;
+
 
         Adafruit_SSD1306 display;
 
 
     public:
-        OledDisplay(int screenWidth, int screenHeight, int mosi,int clk, int dc, int reset,int cs);
+        OledDisplay(int screenWidth, int screenHeight,TwoWire* wire,int reset);
 
         void showOledValues(int interval, int timer);
         void showDhtData(float humidity, float temperature);

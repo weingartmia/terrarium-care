@@ -11,9 +11,12 @@ void Component ::init(){
     digitalWrite(pin,LOW);
 
 }
-void Component:: activate(int time){
+void Component:: activate(){
     Serial.println("          ..component action..          ");
     digitalWrite(pin,HIGH);
-    delay(time);
+
+}
+
+void Component::turnOff(){
     digitalWrite(pin,LOW);
 }

@@ -1,15 +1,18 @@
 #include "SoilHumiditySensor.h"
 #include <Arduino.h>
 
-SoilHumiditySensor::SoilHumiditySensor(uint8_t sensorPin, const int powerPin, const int thresholdValue)
+
+SoilHumiditySensor::SoilHumiditySensor(uint8_t sensorPin, const int thresholdValue, int max, int min)
 :
-Sensor(sensorPin, thresholdValue), powerPin(powerPin){
+Sensor(sensorPin, thresholdValue), powerPin(powerPin), max(max), min(min){
 }
 
 void  SoilHumiditySensor::init(){
-      Serial.println("~init of soil sensor from SoilHumiditySensor init()");
-      pinMode(powerPin, OUTPUT);
-      digitalWrite(powerPin, LOW); // Ensure sensor is off at start
+    Serial.println("~init of soil sensor from SoilHumiditySensor init()");
+
+    analogReadResolution(12);
+    analogSetPinAttenuation(sensorPin, ADC_11db);
+
 
 }
 
@@ -17,8 +20,6 @@ int SoilHumiditySensor::readData(int samples){
 
 
   long total = 0;
-
-  digitalWrite(powerPin, HIGH); // Power ON sensor
 
   
   delay(500); // Wait for sensor to stabilize
@@ -29,7 +30,6 @@ int SoilHumiditySensor::readData(int samples){
  }
  
 
-  digitalWrite(powerPin, LOW); // Power OFF sensor
   return total / samples;
 
 
@@ -40,16 +40,19 @@ void SoilHumiditySensor::read(){
 
     const int data= readData(10);
     
+    
     value=data;
+    Serial.println(value);
+    percent= map(value,min,max,0,100);
     
 }
 
 bool SoilHumiditySensor::isValid(){
     Serial.println("-checking if data from soil sensor are valid...");
 
-    if (value==0) {
+    if (value==4095) {
 
-        Serial.println("-x soil humidity sensor is most likely not working or the humidity is 100% ");
+        Serial.println("-x soil humidity sensor is most likely not working or the humidity is 0% ");
         return false;
 
     }
@@ -60,8 +63,8 @@ bool SoilHumiditySensor::isValid(){
 char SoilHumiditySensor::checkThreshold(){
     Serial.println("--checking if data from soil humidity sensor are inside target values...");
 
-    if(value >= thresholdValue  ){
-        Serial.println("--x data from soil humidity are bigger(humidity is smaller)");
+    if(percent <= thresholdValue  ){
+        Serial.println("--x data from soil humidity is smaller)");
         return 's';
 
     }
