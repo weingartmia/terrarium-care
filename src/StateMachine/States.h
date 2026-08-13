@@ -4,6 +4,8 @@
 
 #ifndef State_h
 #define State_h
+
+#include <Arduino.h>
 class Context;
 
 
@@ -139,19 +141,38 @@ class WateringState : public TimeHandleState{
 class VentingState : public TimeHandleState{
 
     public:
+
         void handleAction() override;
         void handleTimeOut() override;
         ~VentingState() override=default;
+
 
 
 };
 
 class HumidityControlState : public ReadingCheckingState{
     public:
+        HumidityControlState(String caller);
         void handleAction() override;
-        bool checkChangedSoilHumidity(int hum);
-        bool checkChangedAirHumidity(float hum);
-        void setErrorPump();
-        ~HumidityControlState() override=default;
 
+        bool checkChangedSoilHumidity();
+        bool checkChangedAirHumidity();
+        void setErrorPump();
+
+        void handlePumpBothSensorsValidity();
+        void handlePumpDhtSensorValidity();
+        void handlePumpSoilSensorValidity();
+
+        bool checkDecreasedSoilHumidity();
+        bool checkDecreasedAirHumidity();
+        void setErrorVent();
+
+        void handleVentBothSensorsValidity();
+        void handleVentDhtSensorValidity();
+        void handleVentSoilSensorValidity();
+        ~HumidityControlState() override=default;
+    private:
+        String caller;
+        float hum;
+        int humS;
 };

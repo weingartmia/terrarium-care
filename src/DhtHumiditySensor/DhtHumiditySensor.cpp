@@ -8,7 +8,7 @@
 
 DhtHumiditySensor::DhtHumiditySensor(uint8_t sensorPin, const int thresholdValue, const int topThresholdValue, uint8_t sensorType)
 :
-Sensor(sensorPin,thresholdValue), topThresholdValue(topThresholdValue),sensorType(sensorType), dht(sensorPin,sensorType)
+Sensor(sensorPin,thresholdValue,topThresholdValue),sensorType(sensorType), dht(sensorPin,sensorType)
  {}
 
 void DhtHumiditySensor::init(){

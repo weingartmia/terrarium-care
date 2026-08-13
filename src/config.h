@@ -3,6 +3,7 @@
 
 #define SENSOR_PIN  A0 // Analog input pin for sensor
 #define BORDER_SOIL 50// Min soil moisture in percent
+#define MAX_BORDER_SOIL 65 // max soil moisture in percent
 #define AIR_HUMIDITY 4000 // reading from soil sensor when is in air - absolute minimun
 #define WATER_HUMIDITY 1150 // rading from soil sensor in water - absolute maximum
 

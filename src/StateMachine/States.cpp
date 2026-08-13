@@ -23,6 +23,7 @@ TimeHandleState::TimeHandleState():Time(millis()),interval(Time/1000),timer(Time
 };
 
 WateringState::WateringState(int time):time(time){};
+HumidityControlState::HumidityControlState(String caller):caller(caller){};
 
 void TimeHandleState::handleInterval(int diff){
     Serial.println(Time);
@@ -147,7 +148,7 @@ void CheckingState:: handleCount(int caller){
 
         else if (caller==1){
              Serial.println("                          failure caller are both sensors");
-            Serial.println("->Entering error state from checking state");
+            Serial.println("->Entering watering state from checking state");
             this->context->setState(new WateringState(WATERING_TIME_IN_ERROR));
 
         }
@@ -158,22 +159,24 @@ void CheckingState:: handleCount(int caller){
     }
 }
 void CheckingState :: checkSensorsThresholds(){
+            char soilReading = this->context->sensorSoil.checkThreshold();
+            char dhtReading=this->context->sensorDht.checkThreshold();
 
-            if (this->context->sensorSoil.checkThreshold()=='m' && this->context->sensorDht.checkThreshold()=='m' ){
+            if (soilReading=='m' && dhtReading=='m' ){
 
                 Serial.println("==data from sensors are inside threshold void checkSensorsThreshold()");
                 Serial.println("-> entering from checking state to idle state");
                 this->context->pump.isWorking= true;
                 this->context->setState(new IdleState());    
             }
-            else if(this->context->sensorSoil.checkThreshold()=='s' || this->context->sensorDht.checkThreshold()=='s'){
+            else if(soilReading=='s' || dhtReading=='s'){
                 Serial.println("==one of sensors humidity is smaller void checkSensorsThreshold()");
                 Serial.println("-> entering from checking state to watering state");
                 this->context->setState(new WateringState(WATERING_TIME)); 
                 
                 
             }
-            else if(this->context->sensorDht.checkThreshold()=='b'){
+            else if(soilReading=='b'|| dhtReading){
                 Serial.println("==dht humidity is bigger void checkSensorsThreshold()");
                 Serial.println("-> entering from checking state to venting state");
                 this->context->setState(new VentingState()); 
@@ -183,42 +186,53 @@ void CheckingState :: checkSensorsThresholds(){
 }
 
 void CheckingState :: checkSensorDhtThreshold(){
+            char reading = this->context->sensorDht.checkThreshold();
 
-            if (this->context->sensorDht.checkThreshold()=='m' ){
+            if (reading=='m' ){
 
                 Serial.println("==data from dht sensor is inside threshold void checkSensorDhtThreshold()");
                 Serial.println("-> entering from checking state to error state");
                 this->context->setState(new ErrorState());    
             }
-            else if(this->context->sensorDht.checkThreshold()=='s'){
+            else if(reading=='s'){
                 Serial.println("==dht sensor  humidity is smaller void checkSensorDhtThreshold()");
                 Serial.println("-> entering from checking state to watering state");
                 this->context->setState(new WateringState(WATERING_TIME)); 
                 
                 
             }
-            else if(this->context->sensorDht.checkThreshold()=='b'){
+            else if(reading=='b'){
                 Serial.println("==dht humidity is bigger void checkSensorDhtThreshold()");
                 Serial.println("-> entering from checking state to venting state");
                 this->context->setState(new VentingState()); 
                 
             }
+            else {
+                Serial.println( "Error trying to analyse dht sensor data");
+            }
 
 }
 void CheckingState :: checkSensorSoilThreshold(){
 
-            if (this->context->sensorSoil.checkThreshold()=='m' ){
+            char reading=this->context->sensorSoil.checkThreshold();
+
+            if (reading == 'm' ){
 
                 Serial.println("==data from soil sensor is inside threshold void checkSensorSoilThreshold()");
                 Serial.println("-> entering from checking state to error state");
                 this->context->setState(new ErrorState());    
             }
-            else if(this->context->sensorSoil.checkThreshold()=='s'){
+            else if(reading=='s'){
                 Serial.println("==soil sensors humidity is smaller void checkSensorSoilThreshold()");
                 Serial.println("-> entering from checking state to watering state");
                 this->context->setState(new WateringState(WATERING_TIME));  
-                
-                
+                  
+            }
+            else if(reading=='b' ){
+                Serial.println("==soil sensors humidity is bigger void checkSensorSoilThreshold()");
+                Serial.println("-> entering from checking state to venting state");
+                this->context->setState(new VentingState());  
+
             }
             else {
                 Serial.println( "Error trying to analyse soil sensor data");
@@ -345,13 +359,14 @@ void WateringState :: handleTimeOut(){
     Serial.println("---------finished watering....");
     Serial.println("->Entering HumidityControlState from WAtering State");
     this->context->pump.turnOff();
-    this->context->setState(new HumidityControlState()); 
+    this->context->setState(new HumidityControlState("pump")); 
 }
 
 void VentingState :: handleAction(){
 
     Serial.println("        Curently in venting state and venting....");
-    this->context->display.showWatering();
+    this->context->display.showMessage("currrently venting...");
+
     this->context->vent.activate();
     handleInterval(VENTING_TIME);
 
@@ -362,17 +377,17 @@ void VentingState :: handleTimeOut(){
     Serial.println("-------finished venting");
     Serial.println("->Entering HumidityControlState from WAtering State");
     this->context->vent.turnOff();
-    this->context->setState(new ReadingState()); 
+    this->context->setState(new HumidityControlState("vent")); 
 
 }
 
-bool HumidityControlState :: checkChangedAirHumidity(float hum){
+bool HumidityControlState :: checkChangedAirHumidity(){
     if(hum< this->context->sensorDht.valueHumidity ) return true;
     else return false;
 
 }
-bool HumidityControlState :: checkChangedSoilHumidity(int hum){
-    if(hum < this->context->sensorSoil.percent ) return true;
+bool HumidityControlState :: checkChangedSoilHumidity(){
+    if(humS < this->context->sensorSoil.percent ) return true;
     else return false;
 
 }
@@ -381,57 +396,126 @@ void HumidityControlState :: setErrorPump(){
     this->context->pump.isWorking= false;
     this->context->setState(new ErrorState());
 }
+
+bool HumidityControlState :: checkDecreasedAirHumidity(){
+    if(hum> this->context->sensorDht.valueHumidity ) return true;
+    else return false;
+
+}
+bool HumidityControlState :: checkDecreasedSoilHumidity(){
+    if(humS > this->context->sensorSoil.percent ) return true;
+    else return false;
+
+}
+void HumidityControlState :: setErrorVent(){
+    Serial.println(" Error humidity hasnt decreased pump inst working");
+    this->context->vent.isWorking= false;
+    this->context->setState(new ErrorState());
+}
+
+void HumidityControlState::handlePumpBothSensorsValidity(){
+
+    if (checkChangedAirHumidity() || checkChangedSoilHumidity()) {
+
+        Serial.println("******both sesnors are returning valid");
+    
+        Serial.println("humidity has ncreased");
+        Serial.println("->Entering Idle state from humidity control state");
+        this->context->pump.isWorking = true;
+
+        this->context->display.showHumidityIncreased();
+        this->context->setState(new IdleState());
+        }
+    else setErrorPump();
+
+}
+
+void HumidityControlState::handlePumpSoilSensorValidity(){
+
+    if (checkChangedSoilHumidity()) {
+        Serial.println("******only soil humidity sensor is valid");
+        Serial.println("humidity has increased");
+        Serial.println("->Entering Error state from humidity control state");
+        this->context->pump.isWorking = true;
+            
+        this->context->display.showHumidityIncreased();
+        this->context->setState(new ErrorState());
+        }
+    else setErrorPump();
+    }
+void HumidityControlState::handlePumpDhtSensorValidity(){
+    if (checkChangedAirHumidity()) {
+        Serial.println("******only dht humidity sensor is valid");
+        Serial.println("humidity has increased");
+        Serial.println("->Entering Error state from humidity control state");
+        this->context->pump.isWorking = true;
+
+        this->context->display.showHumidityIncreased();
+        this->context->setState(new ErrorState());
+        }
+    else setErrorPump();
+
+}
+void HumidityControlState::handleVentBothSensorsValidity(){
+
+    if (checkDecreasedAirHumidity() || checkDecreasedSoilHumidity()) {
+
+        Serial.println("******both sesnors are returning valid");
+    
+        Serial.println("humidity has decreased");
+        Serial.println("->Entering Idle state from humidity control state");
+        this->context->vent.isWorking = true;
+
+        this->context->setState(new IdleState());
+        }
+    else setErrorVent();
+
+}
+
+void HumidityControlState::handleVentSoilSensorValidity(){
+
+    if (checkDecreasedSoilHumidity()) {
+        Serial.println("******only soil humidity sensor is valid");
+        Serial.println("humidity has decreased");
+        Serial.println("->Entering Error state from humidity control state");
+        this->context->vent.isWorking = true;
+
+        this->context->setState(new ErrorState());
+        }
+    else setErrorVent();
+    }
+void HumidityControlState::handleVentDhtSensorValidity(){
+    if (checkDecreasedAirHumidity()) {
+        Serial.println("******only dht humidity sensor is valid");
+        Serial.println("humidity has decreased");
+        Serial.println("->Entering Error state from humidity control state");
+        this->context->vent.isWorking = true;
+
+        this->context->setState(new ErrorState());
+        }
+    else setErrorVent();
+
+}
 void HumidityControlState :: handleAction(){
 
   
     float hum = this->context->sensorDht.valueHumidity;
     int humS= this->context->sensorSoil.percent;
-    
 
     Serial.println("        Curently in humidity control state and  controlling humidity after vent/pump action....");
     readData();
-
-    if(getBothSensorsValidity()){
-        if (checkChangedAirHumidity(hum) || checkChangedSoilHumidity(humS)) {
-
-            Serial.println("******both sesnors are returning valid");
-    
-            Serial.println("humidity has ncreased");
-            Serial.println("->Entering Idle state from humidity control state");
-            this->context->pump.isWorking = true;
-
-            this->context->display.showHumidityIncreased();
-            this->context->setState(new IdleState());
-        }
-        else setErrorPump();
-        
+   
+    if(getBothSensorsValidity()){     
+        if (caller=="pump") handlePumpBothSensorsValidity();
+        else if (caller =="vent") handleVentBothSensorsValidity();
     }
     else if(getSoilValidity()){
-        if (checkChangedSoilHumidity(humS)) {
-            Serial.println("******only soil humidity sensor is valid");
-            Serial.println("humidity has increased");
-            Serial.println("->Entering Error state from humidity control state");
-            this->context->pump.isWorking = true;
-            
-            this->context->display.showHumidityIncreased();
-            this->context->setState(new ErrorState());
-        }
-        else setErrorPump();
-
-
+        if (caller=="pump") handlePumpSoilSensorValidity();
+        else if (caller=="vent") handleVentSoilSensorValidity();
     }
     else if(getDhtValidity()){
-        if (checkChangedAirHumidity(hum)) {
-            Serial.println("******only dht humidity sensor is valid");
-            Serial.println("humidity has increased");
-            Serial.println("->Entering Error state from humidity control state");
-            this->context->pump.isWorking = true;
-
-            this->context->display.showHumidityIncreased();
-            this->context->setState(new ErrorState());
-        }
-        else setErrorPump();
-
+        if (caller=="pump") handlePumpDhtSensorValidity();
+        else if (caller =="vent") handleVentDhtSensorValidity();
     }
     else if(getBothSensorsInvalidity()){
         Serial.println("->Entering Error state from humidity control state");

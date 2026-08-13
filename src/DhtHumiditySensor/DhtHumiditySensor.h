@@ -11,7 +11,6 @@ class DhtHumiditySensor : public Sensor{
 
     private:
         DHT dht;// make instance of dht inside class to encaplsulate
-        const int topThresholdValue;
         uint8_t sensorType;
 
     public:

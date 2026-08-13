@@ -5,7 +5,7 @@
 #define Sensor_h
 class Sensor {
     public:
-        Sensor( uint8_t sensorPin,const int thresholdValue);
+        Sensor( uint8_t sensorPin,const int thresholdValue,const int topThresholdValue);
 
         virtual void init()=0;
         virtual void read()=0;
@@ -14,6 +14,7 @@ class Sensor {
 
         
         const int thresholdValue;
+        const int topThresholdValue;
         uint8_t sensorPin;
        
 };

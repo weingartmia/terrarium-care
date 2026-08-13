@@ -2,9 +2,9 @@
 #include <Arduino.h>
 
 
-SoilHumiditySensor::SoilHumiditySensor(uint8_t sensorPin, const int thresholdValue, int max, int min)
+SoilHumiditySensor::SoilHumiditySensor(uint8_t sensorPin, const int thresholdValue,const int topThresholdValue, int max, int min)
 :
-Sensor(sensorPin, thresholdValue), powerPin(powerPin), max(max), min(min){
+Sensor(sensorPin, thresholdValue,topThresholdValue), powerPin(powerPin), max(max), min(min){
 }
 
 void  SoilHumiditySensor::init(){
@@ -67,6 +67,10 @@ char SoilHumiditySensor::checkThreshold(){
         Serial.println("--x data from soil humidity is smaller)");
         return 's';
 
+    }
+    else if(percent >= topThresholdValue){
+        Serial.println("--x data from soil humidity are bigger");
+        return 'b';
     }
 
     else return 'm';

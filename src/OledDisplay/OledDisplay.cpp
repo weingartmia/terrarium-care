@@ -88,7 +88,7 @@ void OledDisplay::showTimeCount(int interval, int timer){
     int hoursCount = (interval-timer) / 60;
     int minutesCount = (interval-timer) % 60;
 
-    if (hoursCount >=1) {
+    if (hoursCount <24 && hoursCount >=1) {
 
         showTimeOnOled(hoursCount,minutesCount);
 
