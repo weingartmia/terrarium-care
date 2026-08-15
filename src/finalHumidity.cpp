@@ -20,7 +20,7 @@
 #define SCREEN_HEIGHT 64//  height, in pixels
 
 #define THRESHOLD_HUMIDITY 94 //minimal humisity
-#define ERROR_INTERVAL 60
+#define ERROR_INTERVAL 3
 #define WATERING_INTERVAL 1
 #define READING_INTERVAL 10
 
@@ -36,20 +36,23 @@ int timer;
 unsigned long Time;
 int interval;
 
+bool pumpIsWorking ;
+
 BasicOTA ota;
 DHT dht(dhtPIN,dhtTYPE) ;
 // declare an SSD1306 display object connected to I2C
 Adafruit_SSD1306 oled(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
-void foggerCheck(){
-  
-  if (humidity < THRESHOLD_HUMIDITY-1){
-    if ((interval - timer) ==0 and humidity <= oldhum){
+bool foggerCheck(){
+
+  if (humidity <= oldhum){
       
-      oled.println("fogger isn't working");
+    oled.println("fogger isn't working");
+    return false;
  
-  }}
- oldhum = humidity;
+  }
+  else return true;
+  oldhum = humidity;
       
 }
 
@@ -134,6 +137,7 @@ bool handleTimeOut(int timeout){
 
   if (interval - timer >= timeout) {
     timer= interval;
+    delay(3000);
     return true;
   }
   else return false;
@@ -141,7 +145,8 @@ bool handleTimeOut(int timeout){
 
 void doWatering(int typeInterval){
 
-  if (!handleTimeOut(typeInterval))  digitalWrite(humidpin, HIGH);
+  if (handleTimeOut(typeInterval))  digitalWrite(humidpin, HIGH);
+
  
   else digitalWrite(humidpin, LOW);
   
@@ -157,6 +162,8 @@ void handleErrorAction(){
 void handleWatering(){
 
   doWatering(READING_INTERVAL);
+  delay(2000);
+  foggerCheck();
   showWatering();
 
 }
@@ -188,15 +195,21 @@ void writePins(){
 
 }
 
+
+void doMainAction(){
+      
+  humidity = dht.readHumidity();
+  temperature = dht.readTemperature();
+  mainTimer = interval;
+  if (checkHumidityThreshold() && checkValidValue()) handleWatering();
+  delay(2000);
+
+}
 void handleMainInterval(){
 
-  if (interval - mainTimer >= READING_INTERVAL){
+  if (interval - mainTimer >= READING_INTERVAL|| interval){
+    doMainAction();
     
-    humidity = dht.readHumidity();
-    temperature = dht.readTemperature();
-    mainTimer = interval;
-
-    delay(2000);
 
   }
 }
@@ -232,6 +245,7 @@ void setup() {
 
   delay(2000);         // wait for initializing
   oled.clearDisplay();
+  doMainAction();
 
 }
 
@@ -248,10 +262,10 @@ void loop(){
   writePins();
   handleMainInterval();
 
-    if(!checkHumidityThreshold() && checkValidValue()) doIdleAction();
+  if(checkValidValue()) doIdleAction();
   
-    else if (!checkValidValue()) handleErrorAction();
+  else if (!checkValidValue()) handleErrorAction();
 
-    else if (checkHumidityThreshold() && checkValidValue()) handleWatering();
+    
 
 }
