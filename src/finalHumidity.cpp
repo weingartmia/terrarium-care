@@ -48,10 +48,16 @@ bool foggerCheck(){
   if (humidity <= oldhum){
       
     oled.println("fogger isn't working");
+    oled.display();
     return false;
  
   }
-  else return true;
+  else {
+    oled.clearDisplay();
+    oled.println("humidity has increased");
+    oled.display();
+    return true;
+  }
   oldhum = humidity;
       
 }
@@ -137,7 +143,8 @@ bool handleTimeOut(int timeout){
 
   if (interval - timer >= timeout) {
     timer= interval;
-    delay(3000);
+    oled.println("interval=timer");
+    oled.display();
     return true;
   }
   else return false;
@@ -245,8 +252,9 @@ void setup() {
 
   delay(2000);         // wait for initializing
   oled.clearDisplay();
-  doMainAction();
 
+  doMainAction();
+  oldhum=humidity;
 }
 
 
